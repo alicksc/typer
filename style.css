@@ -22,26 +22,35 @@ body {
   padding: 10px;
 }
 
-#target-text {
+#quote {
   text-align: center;
   font-size: 24px;
   margin-bottom: 20px;
-}
-
-#stats {
-  margin-top: 20px;
 }
 
 #type-box {
   width: 60%;
   font-size: 24px;
   padding: 8px;
+  outline: none;
+  caret-color: transparent;
+  overflow: hidden;
+  position: absolute;
+}
+
+#stats {
+  margin-top: 20px;
 }
 
 #restart-hint {
+  color: slateblue;
   margin: 10px;
-  color: yellow;
   font-size: 14px;
+}
+
+.char {
+  color: #555;
+  white-space: pre;
 }
 
 .correct {
@@ -52,11 +61,21 @@ body {
   color: red;
 }
 
+@keyframes blink {
+  50% {
+    border-color: transparent;
+  }
+}
+
 /* Dark theme using prefers-color-scheme */
 @media (prefers-color-scheme: dark) {
   body {
     color: #f5f5f7;
     background-color: #2c2c2e;
-    box-shadow: 0 8px 24px rgba(255, 255, 255, 0.06);
+    /* box-shadow: 0 8px 24px rgba(255, 255, 255, 0.06); */
+  }
+
+  #restart-hint {
+    color: yellow;
   }
 }

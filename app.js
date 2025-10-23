@@ -1,4 +1,5 @@
-let targetText = "the quick brown fox jumps over the lazy dog";
+let quotes = "";
+let authors = "";
 let typedText = "";
 let startTime = null;
 let timerRunning = false;
@@ -10,15 +11,34 @@ const wpmSpan = document.getElementById("wpm");
 const accuracySpan = document.getElementById("accuracy");
 const hint = document.getElementById("restart-hint");
 
+/**
+ * Later, fetch 50 quotes at a time and store in an array 
+ * This allows for less API calls, instead of 50 API calls for 50 quotes
+ * Logic: Store in array and de
+ */
+async function fetchQuote() {
+  const response = await fetch('https://zenquotes.io/api/random/');
+  const data = await response.json();
+  
+  return data[0].q;
+
+  // return "Later, fetch 50 quotes at a time and store in an array"
+}
+
 
 /**
  * Render each character in from the quote
  */
 function renderQuote() {
+  quotes = fetchQuote();
   quoteDiv.innerHTML = "";
-  for (let i = 0; i < targetText.length; i++) {
+  for (let i = 0; i < quotes.length; i++) {
+    if(quotes[i] == ' ') {
+      
+    }
+    
     const span = document.createElement("span");
-    span.innerText = targetText[i];
+    span.innerText = quotes[i];
     span.classList.add("char");
     quoteDiv.appendChild(span);
   }
@@ -38,7 +58,7 @@ function updateDisplay() {
     spans[i].classList.remove("correct", "incorrect", "current");
 
     if (i < typedText.length) {
-      if (typedText[i] === targetText[i]) {
+      if (typedText[i] === quotes[i]) {
         spans[i].classList.add("correct");
         correct++;
       } else {
@@ -69,7 +89,7 @@ typeBox.addEventListener("keydown", (e) => {
 
   if (!startTime) startTime = Date.now();
 
-  if (e.key.length === 1 && typedText.length < targetText.length) {
+  if (e.key.length === 1 && typedText.length < quotes.length) {
     typedText += e.key;
   } else if (e.key === "Backspace") {
     typedText = typedText.slice(0, -1);

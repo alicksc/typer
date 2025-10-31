@@ -1,9 +1,12 @@
-let quotes = "";
+let quote = "";
 let authors = "";
 let typedText = "";
+let quotes = [];
+let quoteIndex = -1;
 let startTime = null;
 let timerRunning = false;
 let tabPressed = false;
+let quoteDone = false;
 
 const quoteDiv = document.getElementById("quote");
 const typeBox = document.getElementById("type-box");
@@ -16,31 +19,54 @@ const hint = document.getElementById("restart-hint");
  * This allows for less API calls, instead of 50 API calls for 50 quotes
  * Logic: Store in array and de
  */
-async function fetchQuote() {
-  const response = await fetch('https://zenquotes.io/api/random/');
+async function fetchQuotes() {
+  const response = await fetch('http://localhost:3005/api/quotes');
   const data = await response.json();
   
-  return data[0].q;
+  // Save 50 quotes 
+  quotes = data;
 
-  // return "Later, fetch 50 quotes at a time and store in an array"
+  // Quote time!
+  renderQuote();
 }
 
 
 /**
- * Render each character in from the quote
+ * Load quote and render each word and chars from quote
  */
 function renderQuote() {
-  quotes = fetchQuote();
+  // Get next quote
+  quoteIndex = (quoteIndex + 1) % quotes.length;
+  const currentQuote = quotes[quoteIndex];
+  quote = currentQuote.q;
+
+  // Clear previous quote
   quoteDiv.innerHTML = "";
-  for (let i = 0; i < quotes.length; i++) {
-    if(quotes[i] == ' ') {
-      
+
+  // Split the quote into words (preserve punctuation)
+  const words = quote.split(' ');
+  console.log(words);
+
+  for (let word of words) {
+    const wordSpan = document.createElement("span");
+    wordSpan.classList.add("word");
+
+    // Add each character inside this word span
+    for (let char of word) {
+      const charSpan = document.createElement("span");
+      charSpan.innerText = char;
+      charSpan.classList.add("char");
+      wordSpan.appendChild(charSpan);
     }
-    
-    const span = document.createElement("span");
-    span.innerText = quotes[i];
-    span.classList.add("char");
-    quoteDiv.appendChild(span);
+
+    // Add a space at the end of the word
+    const spaceSpan = document.createElement("span");
+    spaceSpan.innerText = " ";
+    spaceSpan.classList.add("char");
+    wordSpan.appendChild(spaceSpan);
+
+    // Append the whole word to the quote container
+    quoteDiv.appendChild(wordSpan);
   }
 }
 
@@ -49,7 +75,7 @@ function renderQuote() {
  * WPM and accuracy checker
  */
 function updateDisplay() {
-  const spans = quoteDiv.querySelectorAll("span");
+  const spans = quoteDiv.querySelectorAll(".char");
   let wpm = 0;
   let accuracy = 100;
   let correct = 0;
@@ -58,7 +84,7 @@ function updateDisplay() {
     spans[i].classList.remove("correct", "incorrect", "current");
 
     if (i < typedText.length) {
-      if (typedText[i] === quotes[i]) {
+      if (typedText[i] === quote[i]) {
         spans[i].classList.add("correct");
         correct++;
       } else {
@@ -80,6 +106,16 @@ function updateDisplay() {
     accuracy = ((correct / typedText.length) * 100).toFixed(1);
   }
 
+  if (typedText === quote) {
+    quoteFinished = true;
+
+    // Optionally disable the typeBox to lock user input visually
+    typeBox.setAttribute("disabled", "true");
+
+    // Optionally show a message
+    console.log("✅ Quote complete!");
+  }
+
   wpmSpan.textContent = `WPM: ${wpm}`;
   accuracySpan.textContent = `Accuracy: ${accuracy}%`;
 }
@@ -89,7 +125,9 @@ typeBox.addEventListener("keydown", (e) => {
 
   if (!startTime) startTime = Date.now();
 
-  if (e.key.length === 1 && typedText.length < quotes.length) {
+  if (quoteDone) return;
+
+  if (e.key.length === 1 && typedText.length < quote.length) {
     typedText += e.key;
   } else if (e.key === "Backspace") {
     typedText = typedText.slice(0, -1);
@@ -124,14 +162,17 @@ function restartTest() {
   typedText = "";
   timerRunning = false;
   typeBox.value = "";
+  typeBox.removeAttribute("disabled");
   startTime = null;
   hint.style.display = "none";
-  renderQuote();
   wpmSpan.textContent = "WPM: 0";
   accuracySpan.textContent = "Accuracy: 100%";
+  quote = "";
+  quoteDone = false;
+  renderQuote();
 }
 
 
 // Run main
-renderQuote();
+fetchQuotes();
 typeBox.focus();
